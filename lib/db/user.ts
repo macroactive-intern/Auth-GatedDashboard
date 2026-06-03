@@ -46,7 +46,7 @@ export async function getUserStats() {
 export async function getPaginatedUsers(page: number) {
   const [users, total] = await Promise.all([
     prisma.user.findMany({
-      select: { id: true, name: true, email: true, image: true, role: true, emailVerified: true },
+      select: { id: true, name: true, email: true, image: true, role: true, createdAt: true },
       orderBy: { email: "asc" },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,

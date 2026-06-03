@@ -23,3 +23,11 @@ export async function updateUserRoleAction(formData: FormData): Promise<void> {
   await updateUserRole(parsed.data.userId, parsed.data.role);
   revalidatePath("/admin/users");
 }
+
+export async function changeUserRole(userId: string, formData: FormData): Promise<void> {
+  await requireRole(Roles.ADMIN);
+
+  const role = z.enum(["USER", "MODERATOR", "ADMIN"]).parse(formData.get("role"));
+  await updateUserRole(userId, role);
+  revalidatePath("/admin/users");
+}
