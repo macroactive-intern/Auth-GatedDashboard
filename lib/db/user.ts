@@ -18,7 +18,7 @@ export async function getAllUsers() {
 export async function getUserById(id: string) {
   return prisma.user.findUnique({
     where: { id },
-    select: { id: true, name: true, email: true, image: true, role: true },
+    select: { id: true, name: true, email: true, image: true, role: true, bio: true },
   });
 }
 
@@ -28,7 +28,7 @@ export async function updateUserRole(id: string, role: Role) {
 
 export async function updateUserProfile(
   id: string,
-  data: { name?: string; image?: string }
+  data: { name?: string; image?: string; bio?: string }
 ) {
   return prisma.user.update({ where: { id }, data });
 }
