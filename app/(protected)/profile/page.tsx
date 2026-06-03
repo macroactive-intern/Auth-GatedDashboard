@@ -1,6 +1,6 @@
 import { requireAuth } from "@/lib/auth/session";
 import { getUserById } from "@/lib/db/user";
-import { updateProfileAction } from "@/actions/profile";
+import { updateProfile } from "@/actions/profile";
 import Image from "next/image";
 
 export default async function ProfilePage() {
@@ -51,7 +51,7 @@ export default async function ProfilePage() {
           )}
 
           {/* Edit form */}
-          <form action={updateProfileAction} className="space-y-4 border-t border-zinc-100 pt-4 dark:border-zinc-800">
+          <form action={updateProfile} className="space-y-4 border-t border-zinc-100 pt-4 dark:border-zinc-800">
             <div>
               <label
                 htmlFor="name"
