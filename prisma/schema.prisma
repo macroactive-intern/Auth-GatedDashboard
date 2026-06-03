@@ -7,6 +7,26 @@ datasource db {
   provider = "sqlite"
 }
 
+enum Role {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(USER)
+  bio           String?
+  createdAt     DateTime  @default(now())
+
+  accounts      Account[]
+  sessions      Session[]
+}
+
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -31,18 +51,8 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
 
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  image         String?
-  role          String    @default("USER")
-  accounts      Account[]
-  sessions      Session[]
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
@@ -51,4 +61,14 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model AdminEvent {
+  id           String   @id @default(cuid())
+  adminId      String
+  targetUserId String
+  action       String
+  oldValue     String?
+  newValue     String?
+  createdAt    DateTime @default(now())
 }

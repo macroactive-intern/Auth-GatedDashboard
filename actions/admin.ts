@@ -8,7 +8,7 @@ import { Roles } from "@/lib/roles";
 
 const updateRoleSchema = z.object({
   userId: z.string(),
-  role: z.enum(["USER", "ADMIN"]),
+  role: z.enum(["USER", "MODERATOR", "ADMIN"]),
 });
 
 export async function updateUserRoleAction(formData: FormData): Promise<void> {
