@@ -1,8 +1,10 @@
 import { requireAuth } from "@/lib/auth/session";
 import { getUserById } from "@/lib/db/user";
 import { getLinkedProviders } from "@/lib/db/account";
+import { getUserSessions } from "@/lib/db/session";
 import { updateProfile, updateAvatar } from "@/actions/profile";
-import { signOutAction } from "@/actions/sessions";
+import { signOutAction, signOutOtherSessions } from "@/actions/sessions";
+import { cookies } from "next/headers";
 import Image from "next/image";
 
 const PROVIDER_LABELS: Record<string, string> = {
@@ -10,11 +12,17 @@ const PROVIDER_LABELS: Record<string, string> = {
   google: "Google",
 };
 
+const SESSION_COOKIES = ["authjs.session-token", "__Secure-authjs.session-token"];
+
 export default async function SettingsPage() {
   const session = await requireAuth();
-  const [user, providers] = await Promise.all([
+  const cookieStore = await cookies();
+  const currentToken = SESSION_COOKIES.map((name) => cookieStore.get(name)?.value).find(Boolean);
+
+  const [user, providers, sessions] = await Promise.all([
     getUserById(session.user.id),
     getLinkedProviders(session.user.id),
+    getUserSessions(session.user.id),
   ]);
 
   if (!user) return null;
@@ -154,10 +162,26 @@ export default async function SettingsPage() {
         {/* Sessions */}
         <section className="rounded-xl border border-zinc-200 bg-white p-6 space-y-4 dark:border-zinc-800 dark:bg-zinc-900">
           <h2 className="font-semibold text-zinc-900 dark:text-white">Sessions</h2>
-          <div className="rounded-lg border border-zinc-100 px-4 py-3 dark:border-zinc-800">
-            <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Current session</p>
-            <p className="text-xs text-zinc-500 mt-0.5">{user.email}</p>
-          </div>
+          <ul className="space-y-2">
+            {sessions.map((s) => {
+              const isCurrent = s.sessionToken === currentToken;
+              return (
+                <li key={s.sessionToken} className="flex items-center justify-between rounded-lg border border-zinc-100 px-4 py-3 dark:border-zinc-800">
+                  <div>
+                    <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                      {isCurrent ? "Current session" : "Session"}
+                    </p>
+                    <p className="text-xs text-zinc-500 mt-0.5">
+                      Expires {new Date(s.expires).toLocaleDateString()}
+                    </p>
+                  </div>
+                  {isCurrent && (
+                    <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Active</span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
           <div className="flex gap-3">
             <form action={signOutAction}>
               <button
@@ -167,18 +191,17 @@ export default async function SettingsPage() {
                 Sign out
               </button>
             </form>
-            <form action={signOutAction}>
-              <button
-                type="submit"
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-              >
-                Sign out everywhere
-              </button>
-            </form>
+            {sessions.length > 1 && (
+              <form action={signOutOtherSessions}>
+                <button
+                  type="submit"
+                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                >
+                  Sign out other sessions ({sessions.length - 1})
+                </button>
+              </form>
+            )}
           </div>
-          <p className="text-xs text-zinc-400">
-            JWT sessions cannot be individually revoked. &ldquo;Sign out everywhere&rdquo; ends your current session.
-          </p>
         </section>
       </div>
     </main>

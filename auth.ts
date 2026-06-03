@@ -11,26 +11,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     GitHub({ allowDangerousEmailAccountLinking: true }),
     Google({ allowDangerousEmailAccountLinking: true }),
   ],
-  session: { strategy: "jwt" },
+  session: { strategy: "database" },
   callbacks: {
-    async jwt({ token, user }) {
-      // user is only populated on sign-in — fetch from DB to get role
-      if (user?.id) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { id: true, role: true },
-        });
-        return {
-          ...token,
-          id: dbUser?.id ?? user.id,
-          role: (dbUser?.role ?? "USER") as Role,
-        };
-      }
-      return token;
-    },
-    session({ session, token }) {
-      session.user.id = token.id as string;
-      session.user.role = token.role as Role;
+    session({ session, user }) {
+      session.user.id = user.id;
+      session.user.role = (user as unknown as { role: Role }).role ?? "USER";
       return session;
     },
   },
