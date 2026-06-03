@@ -1,8 +1,9 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import type { Role } from "@/lib/roles";
+import { hasRole } from "@/lib/auth/permissions";
 
-export async function getSession() {
+export async function getOptionalSession() {
   return await auth();
 }
 
@@ -14,6 +15,6 @@ export async function requireAuth() {
 
 export async function requireRole(role: Role) {
   const session = await requireAuth();
-  if (session.user.role !== role) redirect("/403");
+  if (!hasRole(session.user.role, role)) redirect("/403");
   return session;
 }
